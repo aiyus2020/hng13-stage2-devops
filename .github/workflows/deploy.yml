@@ -16,12 +16,12 @@ jobs:
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/terraform-deploy
-          chmod 600 ~/.ssh/terraform-deploy
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/terraform-deploy.pem
+          chmod 600 ~/.ssh/terraform-deploy.pem
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/terraform-deploy ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/terraform-deploy.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             echo "===== 🚀 Updating and Installing Docker on EC2 ====="
 
             # Update and install docker
