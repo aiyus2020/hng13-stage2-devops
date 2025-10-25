@@ -50,9 +50,9 @@ jobs:
             cd ~/hng13-stage2-devops
             git pull origin main
 
-            echo "===== 🐳 Building and running containers ====="
+            echo "===== 🐳 Bringing containers ====="
             sudo docker compose down || true
-            sudo docker-compose up -d --build
+            sudo docker-compose up -d 
 
             echo "===== ✅ Deployment complete! ====="
           EOF

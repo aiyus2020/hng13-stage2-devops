@@ -16,9 +16,11 @@ blue-green-nginx/
 ├── .env
 ├── docker-compose.yml
 ├── nginx.template.conf
-└── README.md
-
-yaml
+├── README.md
+└── .github/
+    └── workflows/
+        ├── deploy.yml             
+      
 Copy code
 
 ---
