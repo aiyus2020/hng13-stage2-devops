@@ -8,7 +8,7 @@ services:
       - APP_POOL=blue
       - RELEASE_ID=${RELEASE_ID_BLUE}
     ports:
-      - "8081:3000"
+      - "8081:8081"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
       interval: 5s
@@ -22,7 +22,7 @@ services:
       - APP_POOL=green
       - RELEASE_ID=${RELEASE_ID_GREEN}
     ports:
-      - "8082:3000"
+      - "8082:8082"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
       interval: 5s
