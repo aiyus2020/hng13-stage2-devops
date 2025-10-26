@@ -1,55 +1,49 @@
-name: hng13-stage2-devops
-
 version: '3.8'
 
 services:
-  blue_app:
+  app_blue:
     image: ${BLUE_IMAGE}
-    container_name: blue_app
+    container_name: app_blue
     environment:
-      APP_POOL: blue
-      RELEASE_ID: ${RELEASE_ID_BLUE}
-      PORT: ${PORT}
+      - APP_POOL=blue
+      - RELEASE_ID=${RELEASE_ID_BLUE}
     ports:
-      - "8081:${PORT}"
+      - "8081:3000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:${PORT}/healthz || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 5s
-      timeout: 3s
+      timeout: 2s
       retries: 3
-      start_period: 2s
 
-  green_app:
+  app_green:
     image: ${GREEN_IMAGE}
-    container_name: green_app
+    container_name: app_green
     environment:
-      APP_POOL: green
-      RELEASE_ID: ${RELEASE_ID_GREEN}
-      PORT: ${PORT}
+      - APP_POOL=green
+      - RELEASE_ID=${RELEASE_ID_GREEN}
     ports:
-      - "8082:${PORT}"
+      - "8082:3000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:${PORT}/healthz || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 5s
-      timeout: 3s
+      timeout: 2s
       retries: 3
-      start_period: 2s
 
-  nginx_gateway:
-    image: nginx:stable-alpine
-    container_name: nginx_gateway
+  nginx:
+    image: nginx:latest
+    restart: always
+    container_name: nginx
     depends_on:
-      - blue_app
-      - green_app
+      - app_blue
+      - app_green
     ports:
-      - "8080:80"
+      - "${PORT}:80"
+    volumes:
+      - ./nginx.template.conf:/etc/nginx/templates/default.conf.template:ro
     environment:
       - ACTIVE_POOL=${ACTIVE_POOL}
-      - PORT=${PORT}
-    volumes:
-      - ./nginx.conf.tpl:/etc/nginx/templates/nginx.conf.tpl:ro
     command: >
-      /bin/sh -c "
-        envsubst '\$PORT' < /etc/nginx/templates/nginx.conf.tpl > /etc/nginx/nginx.conf &&
-        exec nginx -g 'daemon off;'
+      /bin/bash -c "
+        envsubst '\$ACTIVE_POOL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf &&
+        nginx -g 'daemon off;'
       "
