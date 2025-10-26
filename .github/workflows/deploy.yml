@@ -51,7 +51,7 @@ jobs:
             git pull origin main
 
             echo "===== 🐳 Bringing containers ====="
-            sudo docker compose down || true
+            sudo docker-compose down || true
             sudo docker-compose up -d 
 
             echo "===== ✅ Deployment complete! ====="
