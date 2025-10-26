@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: 🚀 Deploy Blue-Green to EC2
 
 on:
   push:
@@ -7,42 +7,42 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to EC2 Instance
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the latest code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH key
+      # 2️⃣ Setup SSH for EC2 connection
+      - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/terraform-deploy.pem
           chmod 600 ~/.ssh/terraform-deploy.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
+      # 3️⃣ Connect to EC2 and deploy
+      - name: Deploy using SSH
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "===== 🚀 Starting deployment on EC2 ====="
-
+          echo "===== 🚀 Starting Blue/Green Deployment ====="
+          
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/terraform-deploy.pem $EC2_USER@$EC2_HOST << 'EOF'
             set -e
-            echo "===== 🔄 Updating system ====="
+            echo "===== 🔄 Updating Packages ====="
             sudo apt update -y
-            sudo apt install -y docker.io docker-compose git
 
-            echo "===== ⚙️ Enabling and starting Docker ====="
+            echo "===== 🐳 Installing Docker & Compose ====="
+            sudo apt install -y docker.io docker-compose git
             sudo systemctl enable docker
             sudo systemctl start docker
-
-            echo "===== 👤 Configuring Docker permissions ====="
-            sudo usermod -aG docker $USER
             sudo chmod 666 /var/run/docker.sock || true
-            newgrp docker || true
 
-            echo "===== 📦 Cloning or updating repository ====="
+            echo "===== 📦 Cloning or Updating Repo ====="
             if [ ! -d "~/hng13-stage2-devops" ]; then
               git clone https://github.com/${{ github.repository }}.git ~/hng13-stage2-devops
             fi
@@ -50,9 +50,9 @@ jobs:
             cd ~/hng13-stage2-devops
             git pull origin main
 
-            echo "===== 🐳 Bringing containers ====="
+            echo "===== 🔁 Rebuilding Containers ====="
             sudo docker-compose down || true
-            sudo docker-compose up -d 
+            sudo docker-compose up -d
 
-            echo "===== ✅ Deployment complete! ====="
+            echo "===== ✅ Deployment Completed Successfully ====="
           EOF
