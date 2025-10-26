@@ -42,21 +42,17 @@ jobs:
             sudo systemctl start docker
             sudo chmod 666 /var/run/docker.sock || true
 
-            echo "===== 📦 Syncing Repository ====="
-            if [ -d "~/hng13-stage2-devops/.git" ]; then
-              echo "Repo already exists — pulling latest changes..."
-              cd ~/hng13-stage2-devops
-              git reset --hard
-              git pull origin main
-            else
-              echo "Repo not found — cloning fresh copy..."
+            echo "===== 📦 Cloning or Updating Repo ====="
+            if [ ! -d "~/hng13-stage2-devops" ]; then
               git clone https://github.com/${{ github.repository }}.git ~/hng13-stage2-devops
-              cd ~/hng13-stage2-devops
             fi
 
+            cd ~/hng13-stage2-devops
+            git pull origin main
+
             echo "===== 🔁 Rebuilding Containers ====="
-            sudo docker compose down || true
-            sudo docker compose up -d
+            sudo docker-compose down || true
+            sudo docker-compose up -d
 
             echo "===== ✅ Deployment Completed Successfully ====="
           EOF
