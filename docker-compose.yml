@@ -1,49 +1,49 @@
 version: "3.8"
 
 services:
-  blue_service:
+  app_blue:
     image: ${BLUE_IMAGE}
-    container_name: blue_service
+    container_name: app_blue
     environment:
-      - RELEASE_ID=${RELEASE_TAG_BLUE}
+      - RELEASE_ID=${RELEASE_ID_BLUE}
       - APP_POOL=blue
-      - PORT=${APP_PORT}
+      - PORT=${PORT:-3000}
     ports:
-      - "${BLUE_PORT}:${APP_PORT}"
+      - "8081:${PORT:-3000}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT}/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/healthz"]
       interval: 5s
       timeout: 2s
       retries: 3
 
-  green_service:
+  app_green:
     image: ${GREEN_IMAGE}
-    container_name: green_service
+    container_name: app_green
     environment:
-      - RELEASE_ID=${RELEASE_TAG_GREEN}
+      - RELEASE_ID=${RELEASE_ID_GREEN}
       - APP_POOL=green
-      - PORT=${APP_PORT}
+      - PORT=${PORT:-3000}
     ports:
-      - "${GREEN_PORT}:${APP_PORT}"
+      - "8082:${PORT:-3000}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT}/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-3000}/healthz"]
       interval: 5s
       timeout: 2s
       retries: 3
 
-  nginx_gateway:
-    image: nginx:alpine
-    container_name: nginx_gateway
+  nginx:
+    image: nginx:stable
+    container_name: bg_nginx
     depends_on:
-      - blue_service
-      - green_service
+      - app_blue
+      - app_green
     ports:
-      - "${NGINX_ENTRY}:80"
+      - "${NGINX_PUBLIC_PORT:-8080}:80"
     volumes:
-      - ./nginx/nginx.conf.tmpl:/etc/nginx/templates/nginx.conf.tmpl:ro
-      - ./nginx/init.sh:/etc/nginx/init.sh:ro
-      - ./nginx/refresh.sh:/etc/nginx/refresh.sh:ro
+      - ./nginx/default.conf.tmpl:/etc/nginx/templates/default.conf.tmpl:ro
+      - ./nginx/start.sh:/etc/nginx/start.sh:ro
+      - ./nginx/reload.sh:/etc/nginx/reload.sh:ro
     environment:
-      - ACTIVE_TARGET=${ACTIVE_TARGET}
-      - APP_PORT=${APP_PORT}
-    command: ["/bin/sh", "-c", "/etc/nginx/init.sh"]
+      - ACTIVE_POOL=${ACTIVE_POOL}
+      - APP_PORT=${PORT:-3000}
+    command: ["/bin/sh", "-c", "/etc/nginx/start.sh"]
