@@ -1,6 +1,6 @@
 # 🌀 Blue/Green Deployment with Nginx (Auto-Failover + Manual Toggle)
 
-## 📋 Overview
+## 📋 Overview.
 This setup demonstrates Blue/Green deployment using **Nginx** as a load balancer and **Docker Compose** for orchestration.
 
 - Blue = Active (default)
