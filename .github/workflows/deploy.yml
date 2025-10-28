@@ -57,10 +57,10 @@ jobs:
             fi
 
             echo "===== 🧹 Cleaning up old containers ====="
-            sudo docker compose down || true
+            sudo docker-compose down || true
 
             echo "===== 🐳 Building & running containers ====="
-            sudo docker compose up -d --build
+            sudo docker-compose up -d 
 
             echo "===== ✅ Deployment successful! ====="
           EOF
