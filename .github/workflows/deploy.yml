@@ -1,4 +1,4 @@
-name: Deploy Blue-Green to EC2.
+name: 🚀 Deploy to EC2 (Blue-Green App)
 
 on:
   push:
@@ -10,37 +10,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH Key
+      - name: 🔐 Setup SSH access
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/terraform-deploy.pem
           chmod 600 ~/.ssh/terraform-deploy.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy on EC2
+      - name: 🚀 Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "🚀 Connecting to EC2 and deploying..."
+          echo "===== 🚀 Starting deployment on EC2 ====="
+
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/terraform-deploy.pem $EC2_USER@$EC2_HOST << 'EOF'
             set -e
-            echo "🔄 Updating system packages..."
-            sudo apt update -y && sudo apt install -y docker.io docker-compose git
 
-            echo "📦 Cloning repository..."
-            if [ ! -d "~/hng13-stage2-devops" ]; then
+            echo "===== 🔄 Updating system ====="
+            sudo apt update -y
+            sudo apt install -y docker.io docker-compose git
+
+            echo "===== 🐳 Ensuring Docker is running ====="
+            sudo systemctl enable docker
+            sudo systemctl start docker
+
+            echo "===== 👤 Configuring Docker permissions ====="
+            sudo usermod -aG docker $USER || true
+            sudo chmod 666 /var/run/docker.sock || true
+            newgrp docker || true
+
+            echo "===== 📦 Cloning or updating repository ====="
+            if [ -d "~/hng13-stage2-devops/.git" ]; then
+              echo "📁 Repository exists. Pulling latest changes..."
+              cd ~/hng13-stage2-devops
+              git reset --hard
+              git pull origin main
+            else
+              echo "📦 Cloning fresh repository..."
+              rm -rf ~/hng13-stage2-devops || true
               git clone https://github.com/${{ github.repository }}.git ~/hng13-stage2-devops
+              cd ~/hng13-stage2-devops
             fi
-            cd ~/hng13-stage2-devops
-            git pull origin main
 
-            echo "🐳 Starting Docker services..."
-            sudo docker-compose down || true
-            sudo docker-compose up -d --remove-orphans
+            echo "===== 🧹 Cleaning up old containers ====="
+            sudo docker compose down || true
 
-            echo "✅ Deployment complete!"
+            echo "===== 🐳 Building & running containers ====="
+            sudo docker compose up -d --build
+
+            echo "===== ✅ Deployment successful! ====="
           EOF
