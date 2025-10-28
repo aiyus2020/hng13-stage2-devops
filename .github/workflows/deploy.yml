@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy Blue-Green to EC2
 
 on:
   push:
@@ -10,49 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup SSH key
+      - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/terraform-deploy.pem
           chmod 600 ~/.ssh/terraform-deploy.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
+      - name: Deploy on EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          echo "===== 🚀 Starting deployment on EC2 ====="
-
+          echo "🚀 Connecting to EC2 and deploying..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/terraform-deploy.pem $EC2_USER@$EC2_HOST << 'EOF'
             set -e
-            echo "===== 🔄 Updating system ====="
-            sudo apt update -y
-            sudo apt install -y docker.io docker-compose git
+            echo "🔄 Updating system packages..."
+            sudo apt update -y && sudo apt install -y docker.io docker-compose git
 
-            echo "===== ⚙️ Enabling and starting Docker ====="
-            sudo systemctl enable docker
-            sudo systemctl start docker
-
-            echo "===== 👤 Configuring Docker permissions ====="
-            sudo usermod -aG docker $USER
-            sudo chmod 666 /var/run/docker.sock || true
-            newgrp docker || true
-
-            echo "===== 📦 Cloning or updating repository ====="
+            echo "📦 Cloning repository..."
             if [ ! -d "~/hng13-stage2-devops" ]; then
               git clone https://github.com/${{ github.repository }}.git ~/hng13-stage2-devops
             fi
-
             cd ~/hng13-stage2-devops
             git pull origin main
 
-            echo "===== 🐳 Bringing containers ====="
+            echo "🐳 Starting Docker services..."
             sudo docker-compose down || true
-            sudo docker-compose up -d 
+            sudo docker-compose up -d --remove-orphans
 
-            echo "===== ✅ Deployment complete! ====="
+            echo "✅ Deployment complete!"
           EOF
