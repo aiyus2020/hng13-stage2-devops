@@ -10,7 +10,7 @@ This setup demonstrates Blue/Green deployment using **Nginx** as a load balancer
 
 ---
 
-## ⚙️ Project Structure
+## ⚙️ Project Structure.
 blue-green-nginx/
 │
 ├── .env
