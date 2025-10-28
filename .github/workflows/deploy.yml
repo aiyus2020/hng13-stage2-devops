@@ -1,4 +1,4 @@
-name: Deploy Blue-Green to EC2
+name: Deploy Blue-Green to EC2.
 
 on:
   push:
